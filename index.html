@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cipher</title>
+<style>
+  :root {
+    --bg: #f6f5f3;
+    --card: #ffffff;
+    --text: #1c1917;
+    --muted: #8a8580;
+    --border: #e7e4e0;
+    --accent: #1a1a1a;
+    --accent-contrast: #ffffff;
+    --danger: #b91c1c;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Microsoft YaHei", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 56px 22px 80px;
+  }
+
+  header { margin-bottom: 32px; }
+
+  header .title {
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: inline-flex;
+    background: #ece9e5;
+    border-radius: 11px;
+    padding: 4px;
+    gap: 2px;
+    margin-bottom: 18px;
+  }
+
+  .tab {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 550;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .18s ease;
+  }
+
+  .tab.active {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 7px;
+    letter-spacing: 0.01em;
+  }
+
+  .label .hint { font-weight: 400; font-size: 11.5px; }
+
+  .text-input,
+  textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 14px;
+    font: inherit;
+    font-size: 14px;
+    background: #fdfcfa;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+
+  .text-input:focus,
+  textarea:focus {
+    border-color: #c9c4bd;
+    box-shadow: 0 0 0 3px rgba(0,0,0,.04);
+    background: #fff;
+  }
+
+  textarea.out {
+    font-family: "Apple Symbols", "Noto Sans Braille", "Segoe UI Symbol", monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    background: #fbfaf8;
+  }
+
+  textarea[readonly] { color: #3a3530; }
+
+  /* Actions */
+  .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+  }
+
+  .btn {
+    border: none;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform .08s ease, opacity .15s ease;
+  }
+  .btn:hover { opacity: .88; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  .btn.ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-weight: 550;
+    padding: 10px 16px;
+  }
+
+  .spacer { flex: 1; }
+
+  .status {
+    font-size: 12.5px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+  .status.error { color: var(--danger); }
+
+  .copy-ok { color: var(--accent); }
+
+  @media (max-width: 520px) {
+    .wrap { padding: 36px 16px 60px; }
+    .actions { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">Cipher</div>
+    </header>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="field" style="margin-bottom:0">
+        <div class="label">
+          <span>密码</span>
+          <span class="hint"><button class="tab" id="togglePwd" style="padding:4px 12px">显示</button></span>
+        </div>
+        <input class="text-input" id="password" type="password" placeholder="输入密码…" autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-mode="encrypt" role="tab">加密</button>
+      <button class="tab" data-mode="decrypt" role="tab">解密</button>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <div class="label">
+          <span id="inLabel">明文输入</span>
+          <span class="hint" id="inCount"></span>
+        </div>
+        <textarea id="input" placeholder="在此输入要加密的内容…" spellcheck="false"></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="runBtn">加密</button>
+        <button class="btn ghost" id="swapBtn" title="把输出移到输入">↑ 使用输出</button>
+        <div class="spacer"></div>
+        <span class="status" id="status"></span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="field">
+        <div class="label">
+          <span id="outLabel">密文</span>
+          <span class="hint"><button class="tab" id="copyBtn" style="padding:4px 12px">复制</button></span>
+        </div>
+        <textarea id="output" class="out" readonly placeholder="结果将显示在这里…" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+"use strict";
+
+const SALTS = [
+  ["6296509963e2a2f6a11d0beb98c4f0aa", "dad46f4a8901899366f522aa0cbc8465"],
+  ["ef05d97944e4a61e1b022d64ffe8f7f9", "808b50be03036d3f84c7f1ddbc37e910"],
+  ["7b1e607b5d5cb8c9c4a1d38cd5c04622", "17e33e4540c60199f02c9fd0b4e44b21"],
+  ["ab1fe9817df68e03df25044fac9dc189", "cdd8fea0959a06209b8d62e10d97258f"],
+  ["338a6af3da3aaa9964de6ab02ca53642", "91e7e26686057169b2bb787144daa947"],
+];
+const IV_LEN = 12;
+const BRAILLE_BASE = 0x2800;
+const AES_IMPORT = { name: "AES-GCM", length: 256 };
+
+function strToBytes(str) { return new TextEncoder().encode(str); }
+function bytesToStr(bytes) { return new TextDecoder().decode(bytes); }
+
+function concat(...arrays) {
+  let total = 0;
+  for (const a of arrays) total += a.length;
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const a of arrays) { out.set(a, off); off += a.length; }
+  return out;
+}
+
+async function streamToBytes(readable) {
+  const reader = readable.getReader();
+  const chunks = [];
+  let total = 0;
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.length;
+  }
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return out;
+}
+
+async function gzipBytes(bytes) {
+  const cs = new CompressionStream("gzip");
+  const w = cs.writable.getWriter();
+  w.write(bytes); w.close();
+  return streamToBytes(cs.readable);
+}
+
+async function gunzipBytes(bytes) {
+  const ds = new DecompressionStream("gzip");
+  const w = ds.writable.getWriter();
+  w.write(bytes); w.close();
+  return streamToBytes(ds.readable);
+}
+
+async function hashStr(algo, str) {
+  return new Uint8Array(await crypto.subtle.digest(algo, strToBytes(str)));
+}
+
+async function deriveMaterial(password) {
+  const [pre0, suf0] = SALTS[0];
+  const keyRaw = await hashStr("SHA-256", pre0 + password + suf0);
+  const key = await crypto.subtle.importKey("raw", keyRaw, AES_IMPORT, false, ["encrypt", "decrypt"]);
+
+  const P = new Uint8Array(256);
+  let off = 0;
+  for (let i = 1; i <= 4; i++) {
+    const [pre, suf] = SALTS[i];
+    const h = await hashStr("SHA-512", pre + password + suf);
+    P.set(h, off);
+    off += h.length;
+  }
+
+  const pool = new Array(256);
+  for (let c = 0; c < 256; c++) pool[c] = BRAILLE_BASE + c;
+
+  const encMap = new Array(256);
+  const decMap = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) {
+    const idx = P[i] % pool.length;
+    const cp = pool.splice(idx, 1)[0];
+    encMap[i] = cp;
+    decMap[cp - BRAILLE_BASE] = i;
+  }
+
+  return { key, encMap, decMap };
+}
+
+let _cache = null;
+async function getMaterial(password) {
+  if (_cache && _cache.password === password) return _cache.mat;
+  const mat = await deriveMaterial(password);
+  _cache = { password, mat };
+  return mat;
+}
+
+function bytesToBraille(bytes, encMap) {
+  const chars = new Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    chars[i] = String.fromCharCode(encMap[bytes[i]]);
+  }
+  return chars.join("");
+}
+
+function brailleToBytes(str, decMap) {
+  const out = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if (code < BRAILLE_BASE || code > 0x28FF) throw new Error("密文格式无效");
+    out[i] = decMap[code - BRAILLE_BASE];
+  }
+  return out;
+}
+
+async function encrypt(plaintext, password) {
+  const { key, encMap } = await getMaterial(password);
+  const compressed = await gzipBytes(strToBytes(plaintext));
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LEN));
+  const enc = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, compressed));
+  return bytesToBraille(concat(iv, enc), encMap);
+}
+
+async function decrypt(braille, password) {
+  const { key, decMap } = await getMaterial(password);
+  const data = brailleToBytes(braille, decMap);
+  if (data.length < IV_LEN + 16) throw new Error("密文已损坏或无效");
+  const iv = data.subarray(0, IV_LEN);
+  const enc = data.subarray(IV_LEN);
+  let compressed;
+  try {
+    compressed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, enc));
+  } catch (e) {
+    throw new Error("解密失败：密文已损坏或无效");
+  }
+  return bytesToStr(await gunzipBytes(compressed));
+}
+
+const $ = (id) => document.getElementById(id);
+const passwordEl = $("password");
+const togglePwd = $("togglePwd");
+const inputEl = $("input");
+const outputEl = $("output");
+const runBtn = $("runBtn");
+const swapBtn = $("swapBtn");
+const copyBtn = $("copyBtn");
+const statusEl = $("status");
+const inLabel = $("inLabel");
+const outLabel = $("outLabel");
+const inCount = $("inCount");
+
+let mode = "encrypt";
+
+function setMode(next) {
+  mode = next;
+  document.querySelectorAll(".tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.mode === next);
+  });
+  const enc = next === "encrypt";
+  inLabel.textContent = enc ? "明文输入" : "密文输入";
+  outLabel.textContent = enc ? "密文" : "解密明文";
+  runBtn.textContent = enc ? "加密" : "解密";
+  inputEl.placeholder = enc ? "在此输入要加密的内容…" : "在此粘贴密文…";
+  outputEl.placeholder = enc ? "结果将显示在这里…" : "解密结果将显示在这里…";
+  const tmp = outputEl.value;
+  outputEl.value = "";
+  inputEl.value = tmp;
+  setStatus("");
+  updateCount();
+}
+
+function setStatus(msg, isError) {
+  statusEl.textContent = msg || "";
+  statusEl.classList.toggle("error", !!isError);
+}
+
+function updateCount() {
+  const v = inputEl.value;
+  inCount.textContent = v ? (v.length + " 字符") : "";
+}
+
+passwordEl.addEventListener("input", () => { _cache = null; });
+
+togglePwd.addEventListener("click", () => {
+  const show = passwordEl.type === "password";
+  passwordEl.type = show ? "text" : "password";
+  togglePwd.textContent = show ? "隐藏" : "显示";
+});
+
+inputEl.addEventListener("input", updateCount);
+
+document.querySelectorAll(".tab[data-mode]").forEach(t => {
+  t.addEventListener("click", () => setMode(t.dataset.mode));
+});
+
+swapBtn.addEventListener("click", () => {
+  if (!outputEl.value) { setStatus("输出为空", true); return; }
+  inputEl.value = outputEl.value;
+  outputEl.value = "";
+  inputEl.focus();
+  setStatus("");
+  updateCount();
+});
+
+copyBtn.addEventListener("click", async () => {
+  if (!outputEl.value) return;
+  try {
+    await navigator.clipboard.writeText(outputEl.value);
+    const prev = statusEl.textContent;
+    statusEl.textContent = "已复制到剪贴板";
+    statusEl.classList.add("copy-ok");
+    setTimeout(() => {
+      statusEl.textContent = prev;
+      statusEl.classList.remove("copy-ok");
+    }, 1200);
+  } catch {
+    outputEl.select();
+    document.execCommand("copy");
+    setStatus("已复制", false);
+  }
+});
+
+runBtn.addEventListener("click", async () => {
+  const text = inputEl.value;
+  const password = passwordEl.value;
+  runBtn.disabled = true;
+  setStatus("处理中…");
+  try {
+    const result = mode === "encrypt"
+      ? await encrypt(text, password)
+      : await decrypt(text, password);
+    outputEl.value = result;
+    setStatus(mode === "encrypt" ? "已加密" : "已解密");
+  } catch (e) {
+    outputEl.value = "";
+    setStatus(e.message || "发生未知错误", true);
+  } finally {
+    runBtn.disabled = false;
+  }
+});
+
+function quickRun(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    runBtn.click();
+  }
+}
+inputEl.addEventListener("keydown", quickRun);
+passwordEl.addEventListener("keydown", quickRun);
+
+setMode("encrypt");
+updateCount();
+</script>
+</body>
+</html>
